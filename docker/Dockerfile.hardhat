@@ -1,0 +1,13 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.json hardhat.config.ts ./
+COPY contracts ./contracts
+COPY scripts ./scripts
+
+RUN npm ci
+
+EXPOSE 8545
+
+CMD ["npx", "hardhat", "node", "--hostname", "0.0.0.0"]

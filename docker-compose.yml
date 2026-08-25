@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Local Hardhat Blockchain Node (Simulates Polygon EVM locally)
+  hardhat-node:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.hardhat
+    ports:
+      - "8545:8545"
+    networks:
+      - evidence-net
+
+  # PostgreSQL Database (Off-chain metadata & audit logs)
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: evidence_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - evidence-net
+
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/evidence_db
+      - BLOCKCHAIN_RPC_URL=http://hardhat-node:8545
+      - BLOCKCHAIN_NETWORK_NAME=Local Hardhat / Polygon Amoy
+      - CHAIN_ID=31337
+      - CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+      - REGISTRAR_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+      - STORAGE_DIR=/app/storage/evidence
+    depends_on:
+      - postgres
+      - hardhat-node
+    volumes:
+      - evidence_storage:/app/storage/evidence
+    networks:
+      - evidence-net
+
+  # Next.js Investigator Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - evidence-net
+
+networks:
+  evidence-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  evidence_storage:

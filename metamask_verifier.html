@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidence Integrity - MetaMask Web3 Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Ethers.js v6 CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+  <style>
+    body { background-color: #0b0f19; color: #f3f4f6; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(55, 65, 81, 0.5); }
+    .glow-cyan { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); }
+  </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex flex-col items-center justify-start">
+  
+  <!-- Header -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 glass p-5 rounded-2xl glow-cyan">
+    <div class="flex items-center space-x-3">
+      <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-white tracking-wide">Evidence Integrity Ledger</h1>
+        <p class="text-xs text-slate-400">MetaMask Web3 Client for Law Enforcement & Public Auditing</p>
+      </div>
+    </div>
+
+    <!-- Connect Wallet & Network Buttons -->
+    <div class="flex items-center space-x-2">
+      <button id="connectWalletBtn" onclick="connectWallet()" class="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-cyan-900/30">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="w-4 h-4" alt="MetaMask" />
+        <span id="walletBtnText">Connect MetaMask</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-4xl space-y-6">
+    
+    <!-- Quick Network Switch Helper -->
+    <div class="glass p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+      <span class="text-slate-400">Quick Switch Network in MetaMask:</span>
+      <div class="flex items-center space-x-2">
+        <button onclick="switchToHardhatLocal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition">
+          Switch to Localhost (8545)
+        </button>
+        <button onclick="switchToPolygonAmoy()" class="px-3 py-1.5 bg-indigo-900/50 hover:bg-indigo-800/50 text-indigo-300 rounded-lg text-xs font-medium border border-indigo-700/50 transition">
+          Switch to Polygon Amoy
+        </button>
+      </div>
+    </div>
+
+    <!-- Wallet & Contract Info Bar -->
+    <div class="glass p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+      <div>
+        <p class="text-slate-400 uppercase font-semibold text-[10px]">Connected Wallet</p>
+        <p id="walletAddress" class="font-mono text-cyan-400 truncate mt-0.5">Not Connected</p>
+      </div>
+      <div>
+        <p class="text-slate-400 uppercase font-semibold text-[10px]">Active Network</p>
+        <p id="networkName" class="font-medium text-slate-200 mt-0.5">Disconnected</p>
+      </div>
+      <div>
+        <p class="text-slate-400 uppercase font-semibold text-[10px]">Target Contract Address</p>
+        <input id="contractAddressInput" type="text" value="0x5FbDB2315678afecb367f032d93F642f64180aa3" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-mono text-indigo-300 text-xs mt-0.5 focus:outline-none focus:border-cyan-500" />
+      </div>
+    </div>
+
+    <!-- Tab Selection -->
+    <div class="flex space-x-2 border-b border-slate-800 pb-2">
+      <button onclick="switchTab('verifyTab')" id="tabVerifyBtn" class="px-5 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition">
+        1. Verify Evidence (Zero-Gas)
+      </button>
+      <button onclick="switchTab('registerTab')" id="tabRegisterBtn" class="px-5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white transition">
+        2. Register Evidence (MetaMask Sign)
+      </button>
+    </div>
+
+    <!-- TAB 1: ZERO-GAS VERIFICATION -->
+    <section id="verifyTab" class="glass p-6 rounded-2xl space-y-5">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+          <span>Public On-Chain Integrity Verification</span>
+          <span class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20 uppercase">0 Gas ($0.00)</span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Upload any evidence file to recalculate its SHA-256 fingerprint and compare it directly against the blockchain.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Evidence ID</label>
+          <input id="verifyEvidenceId" type="text" placeholder="e.g. EV-WALLET-DEMO-001" value="EV-WALLET-DEMO-001" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Select Candidate Evidence File</label>
+          <input id="verifyFileInput" type="file" onchange="handleVerifyFileSelect(event)" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer bg-slate-950 p-2 rounded-xl border border-slate-800" />
+        </div>
+
+        <div id="verifyComputedHashBox" class="hidden bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono">
+          <span class="text-slate-400">Calculated SHA-256: </span>
+          <span id="verifyComputedHash" class="text-cyan-400 break-all"></span>
+        </div>
+
+        <button onclick="runOnChainVerification()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-emerald-900/30">
+          Run On-Chain Verification
+        </button>
+      </div>
+
+      <!-- Verification Result Alert Box -->
+      <div id="verificationResultBox" class="hidden p-4 rounded-xl border space-y-3">
+        <div class="flex items-start space-x-3">
+          <div id="resultIcon" class="mt-0.5"></div>
+          <div>
+            <h3 id="resultTitle" class="font-bold text-sm"></h3>
+            <p id="resultDesc" class="text-xs text-slate-300 mt-0.5 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-[11px] bg-slate-950/80 p-3 rounded-lg border border-slate-800 font-mono">
+          <div>
+            <span class="text-slate-500 uppercase">Registered Version:</span>
+            <span id="resultVersion" class="text-slate-200 ml-2 font-bold"></span>
+          </div>
+          <div>
+            <span class="text-slate-500 uppercase">Registered At:</span>
+            <span id="resultTimestamp" class="text-slate-200 ml-2"></span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-slate-500 uppercase">Registrar Wallet:</span>
+            <span id="resultRegistrar" class="text-cyan-300 ml-2 truncate block"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: REGISTER EVIDENCE VIA METAMASK -->
+    <section id="registerTab" class="hidden glass p-6 rounded-2xl space-y-5">
+      <div>
+        <h2 class="text-lg font-bold text-white">Register Evidence with MetaMask</h2>
+        <p class="text-xs text-slate-400 mt-1">Signs and broadcasts a <code class="text-cyan-400">registerEvidence</code> transaction directly from your connected MetaMask account.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Evidence ID</label>
+          <input id="regEvidenceId" type="text" placeholder="e.g. EV-WALLET-DEMO-001" value="EV-WALLET-DEMO-001" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Select Evidence File (PDF, CDR, Image)</label>
+          <input id="regFileInput" type="file" onchange="handleRegFileSelect(event)" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer bg-slate-950 p-2 rounded-xl border border-slate-800" />
+        </div>
+
+        <div id="regComputedHashBox" class="hidden bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono">
+          <span class="text-slate-400">Calculated SHA-256 Fingerprint: </span>
+          <span id="regComputedHash" class="text-cyan-400 break-all"></span>
+        </div>
+
+        <button onclick="registerWithMetaMask()" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-cyan-900/30">
+          Sign & Register via MetaMask
+        </button>
+      </div>
+
+      <!-- Registration Tx Status Box -->
+      <div id="regStatusBox" class="hidden p-4 rounded-xl border bg-slate-950 border-slate-800 space-y-2 text-xs">
+        <p id="regStatusText" class="font-medium text-slate-200"></p>
+        <p id="regTxHash" class="font-mono text-cyan-400 break-all"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Smart Contract Minimal ABI
+    const ABI = [
+      "function registerEvidence(bytes32 evidenceId, bytes32 evidenceHash) external returns (uint256)",
+      "function getEvidence(bytes32 evidenceId, uint256 version) external view returns (bytes32 evidenceHash, uint256 registeredAt, address registeredBy, bool exists)",
+      "function getLatestEvidence(bytes32 evidenceId) external view returns (uint256 version, bytes32 evidenceHash, uint256 registeredAt, address registeredBy, bool exists)",
+      "function verifyEvidence(bytes32 evidenceId, uint256 version, bytes32 currentEvidenceHash) external view returns (bool isValid, uint256 registeredAt, address registeredBy)",
+      "function verifyLatestEvidence(bytes32 evidenceId, bytes32 currentEvidenceHash) external view returns (bool isValid, uint256 version, uint256 registeredAt, address registeredBy)",
+      "function latestVersion(bytes32 evidenceId) external view returns (uint256)"
+    ];
+
+    let userSigner = null;
+    let userProvider = null;
+    let computedVerifyHashHex = "";
+    let computedRegHashHex = "";
+
+    async function connectWallet() {
+      if (typeof window.ethereum === "undefined") {
+        alert("MetaMask not detected! Please install the MetaMask browser extension.");
+        return;
+      }
+
+      try {
+        userProvider = new ethers.BrowserProvider(window.ethereum);
+        await userProvider.send("eth_requestAccounts", []);
+        userSigner = await userProvider.getSigner();
+
+        const address = await userSigner.getAddress();
+        const network = await userProvider.getNetwork();
+
+        document.getElementById("walletAddress").innerText = address;
+        document.getElementById("networkName").innerText = `${network.name || 'Custom'} (Chain ID: ${network.chainId})`;
+        document.getElementById("walletBtnText").innerText = `${address.substring(0, 6)}...${address.substring(38)}`;
+      } catch (err) {
+        console.error("Connection error:", err);
+        alert("Failed to connect MetaMask: " + err.message);
+      }
+    }
+
+    async function switchToHardhatLocal() {
+      if (!window.ethereum) return alert("MetaMask not detected!");
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x7a69" }], // 31337 in hex
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x7a69",
+                chainName: "Hardhat Localhost (8545)",
+                rpcUrls: ["http://127.0.0.1:8545"],
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }
+              }],
+            });
+          } catch (addError) {
+            console.error(addError);
+          }
+        }
+      }
+      setTimeout(connectWallet, 500);
+    }
+
+    async function switchToPolygonAmoy() {
+      if (!window.ethereum) return alert("MetaMask not detected!");
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x13882" }], // 80002 in hex
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x13882",
+                chainName: "Polygon Amoy Testnet",
+                rpcUrls: ["https://rpc-amoy.polygon.technology"],
+                nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+                blockExplorerUrls: ["https://amoy.polygonscan.com"]
+              }],
+            });
+          } catch (addError) {
+            console.error(addError);
+          }
+        }
+      }
+      setTimeout(connectWallet, 500);
+    }
+
+    // Helper: Compute SHA-256 in browser
+    async function computeFileSha256(file) {
+      const buffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function handleVerifyFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      computedVerifyHashHex = await computeFileSha256(file);
+      document.getElementById("verifyComputedHash").innerText = computedVerifyHashHex;
+      document.getElementById("verifyComputedHashBox").classList.remove("hidden");
+    }
+
+    async function handleRegFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      computedRegHashHex = await computeFileSha256(file);
+      document.getElementById("regComputedHash").innerText = computedRegHashHex;
+      document.getElementById("regComputedHashBox").classList.remove("hidden");
+    }
+
+    // Zero-Gas On-Chain Verification
+    async function runOnChainVerification() {
+      const contractAddress = document.getElementById("contractAddressInput").value.trim();
+      const evidenceIdStr = document.getElementById("verifyEvidenceId").value.trim();
+
+      if (!computedVerifyHashHex) {
+        alert("Please select a candidate file to verify.");
+        return;
+      }
+
+      let provider = userProvider;
+      if (!provider) {
+        if (typeof window.ethereum !== "undefined") {
+          provider = new ethers.BrowserProvider(window.ethereum);
+        } else {
+          provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+        }
+      }
+
+      try {
+        // Pre-flight check: ensure bytecode exists at address
+        const code = await provider.getCode(contractAddress);
+        if (!code || code === "0x") {
+          const network = await provider.getNetwork();
+          alert(
+            `No smart contract found at ${contractAddress} on the currently selected network (${network.name || 'Custom'}, Chain ID: ${network.chainId}).\n\n` +
+            `Solution:\n1. If using local hardhat node, run 'npx hardhat node' and deploy contract with 'npx hardhat run scripts/deploy.ts --network localhost'.\n` +
+            `2. Ensure MetaMask is switched to the same network.`
+          );
+          return;
+        }
+
+        const contract = new ethers.Contract(contractAddress, ABI, provider);
+        const evidenceIdBytes32 = ethers.keccak256(ethers.toUtf8Bytes(evidenceIdStr));
+        const hashBytes32 = "0x" + computedVerifyHashHex;
+
+        // Zero-gas view call
+        const [isValid, version, timestamp, registeredBy] = await contract.verifyLatestEvidence(
+          evidenceIdBytes32,
+          hashBytes32
+        );
+
+        const resultBox = document.getElementById("verificationResultBox");
+        resultBox.classList.remove("hidden");
+
+        if (isValid) {
+          resultBox.className = "p-4 rounded-xl border bg-emerald-950/40 border-emerald-500/40 text-emerald-300 space-y-3";
+          document.getElementById("resultTitle").innerText = "✓ VERIFIED - CRYPTOGRAPHIC INTEGRITY CONFIRMED";
+          document.getElementById("resultDesc").innerText = "The calculated SHA-256 fingerprint matches the immutable blockchain anchor.";
+          document.getElementById("resultVersion").innerText = `v${version.toString()}`;
+          document.getElementById("resultTimestamp").innerText = new Date(Number(timestamp) * 1000).toLocaleString();
+          document.getElementById("resultRegistrar").innerText = registeredBy;
+        } else {
+          resultBox.className = "p-4 rounded-xl border bg-amber-950/40 border-amber-500/40 text-amber-300 space-y-3";
+          document.getElementById("resultTitle").innerText = "⚠ POTENTIAL INTEGRITY MISMATCH";
+          document.getElementById("resultDesc").innerText = "The file fingerprint does NOT match the registered blockchain version. The file may have been modified or corrupted.";
+          document.getElementById("resultVersion").innerText = `v${version.toString()}`;
+          document.getElementById("resultTimestamp").innerText = timestamp > 0n ? new Date(Number(timestamp) * 1000).toLocaleString() : "N/A";
+          document.getElementById("resultRegistrar").innerText = registeredBy !== "0x0000000000000000000000000000000000000000" ? registeredBy : "Unregistered";
+        }
+      } catch (err) {
+        console.error("Verification error:", err);
+        alert("Verification failed: " + err.message);
+      }
+    }
+
+    // Register via MetaMask Transaction
+    async function registerWithMetaMask() {
+      if (!userSigner) {
+        await connectWallet();
+        if (!userSigner) return;
+      }
+
+      const contractAddress = document.getElementById("contractAddressInput").value.trim();
+      const evidenceIdStr = document.getElementById("regEvidenceId").value.trim();
+
+      if (!computedRegHashHex) {
+        alert("Please select an evidence file to register.");
+        return;
+      }
+
+      const statusBox = document.getElementById("regStatusBox");
+      const statusText = document.getElementById("regStatusText");
+      const txHashEl = document.getElementById("regTxHash");
+
+      statusBox.classList.remove("hidden");
+      statusText.innerText = "Prompting MetaMask for transaction signature...";
+      txHashEl.innerText = "";
+
+      try {
+        const contract = new ethers.Contract(contractAddress, ABI, userSigner);
+        const evidenceIdBytes32 = ethers.keccak256(ethers.toUtf8Bytes(evidenceIdStr));
+        const hashBytes32 = "0x" + computedRegHashHex;
+
+        const tx = await contract.registerEvidence(evidenceIdBytes32, hashBytes32);
+        statusText.innerText = "Transaction Broadcasted! Waiting for block confirmation...";
+        txHashEl.innerText = `Tx Hash: ${tx.hash}`;
+
+        const receipt = await tx.wait();
+        statusText.innerText = `✓ Successfully Confirmed on Blockchain! (Block #${receipt.blockNumber})`;
+      } catch (err) {
+        console.error("Registration error:", err);
+        statusText.innerText = `❌ Registration Failed: ${err.message}`;
+      }
+    }
+
+    // Tab Switcher
+    function switchTab(tabId) {
+      document.getElementById("verifyTab").classList.add("hidden");
+      document.getElementById("registerTab").classList.add("hidden");
+      document.getElementById("tabVerifyBtn").className = "px-5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white transition";
+      document.getElementById("tabRegisterBtn").className = "px-5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white transition";
+
+      document.getElementById(tabId).classList.remove("hidden");
+      if (tabId === 'verifyTab') {
+        document.getElementById("tabVerifyBtn").className = "px-5 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition";
+      } else {
+        document.getElementById("tabRegisterBtn").className = "px-5 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition";
+      }
+    }
+  </script>
+</body>
+</html>
