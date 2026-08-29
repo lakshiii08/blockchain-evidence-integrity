@@ -28,6 +28,19 @@ STORAGE_DIR = os.getenv("STORAGE_DIR", "./storage/evidence")
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
 
+@router.get("/contract/info", tags=["Smart Contract Metadata"])
+def get_contract_info():
+    """Retrieves deployment address, network metadata, and connection status for EvidenceRegistry."""
+    return blockchain_service.get_contract_info()
+
+
+@router.get("/contract/abi", tags=["Smart Contract Metadata"])
+def get_contract_abi():
+    """Retrieves the full JSON ABI of the EvidenceRegistry smart contract."""
+    return blockchain_service.get_abi()
+
+
+
 @router.post("/register", response_model=EvidenceRegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register_evidence(
     evidence_id: str = Form(..., description="Unique Evidence ID, e.g. EV-101"),

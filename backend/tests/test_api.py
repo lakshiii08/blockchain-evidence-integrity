@@ -55,6 +55,21 @@ def test_health_check(client):
     assert data["module"] == "blockchain-evidence-integrity"
 
 
+def test_contract_info_and_abi(client):
+    info_resp = client.get("/api/evidence/contract/info")
+    assert info_resp.status_code == 200
+    info_data = info_resp.json()
+    assert info_data["contract_name"] == "EvidenceRegistry"
+    assert info_data["contract_address"] is not None
+
+    abi_resp = client.get("/api/evidence/contract/abi")
+    assert abi_resp.status_code == 200
+    abi_data = abi_resp.json()
+    assert isinstance(abi_data, list)
+    assert len(abi_data) > 0
+
+
+
 def test_end_to_end_evidence_lifecycle(client):
     # 1. Register synthetic evidence file
     file_content = b"%PDF-1.4 Synthetic FIR Document Case #991/2026. Suspect vehicle registration XYZ-9988."

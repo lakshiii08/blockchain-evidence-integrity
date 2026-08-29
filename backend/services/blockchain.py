@@ -294,6 +294,23 @@ class BlockchainService:
         evidence_id_b32 = string_to_bytes32(evidence_id_str)
         return self.contract.functions.latestVersion(evidence_id_b32).call()
 
+    def get_contract_info(self) -> Dict[str, Any]:
+        return {
+            "contract_name": "EvidenceRegistry",
+            "contract_address": self.contract_address or "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+            "network_name": self.network_name,
+            "chain_id": self.chain_id,
+            "rpc_url": self.rpc_url,
+            "is_connected": self.is_connected(),
+            "has_registrar_wallet": self.account is not None,
+            "registrar_address": self.account.address if self.account else None,
+            "explorer_base_url": self.explorer_base_url,
+        }
+
+    def get_abi(self) -> list:
+        return self.abi
+
 
 # Singleton instance for application-wide dependency
 blockchain_service = BlockchainService()
+
