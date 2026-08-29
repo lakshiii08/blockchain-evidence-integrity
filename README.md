@@ -49,7 +49,7 @@ blockchain-evidence-integrity/
 ├── scripts/
 │   ├── deploy.ts                     # Deployment & ABI export pipeline
 │   ├── generate_synthetic_evidence.py # Synthetic FIR and CDR generator
-│   └── demo_flow.py                  # 8-step end-to-end hackathon demonstration
+│   └── demo_flow.py                  # 8-step end-to-end demonstration
 ├── backend/
 │   ├── api/
 │   │   └── routes_evidence.py        # REST API endpoints (register, verify, provenance, ABI)
