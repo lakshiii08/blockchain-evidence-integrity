@@ -48,20 +48,6 @@ services:
     networks:
       - evidence-net
 
-  # Next.js Investigator Frontend Dashboard
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-    depends_on:
-      - backend
-    networks:
-      - evidence-net
-
 networks:
   evidence-net:
     driver: bridge

@@ -56,19 +56,10 @@ async function main() {
     path.join(backendArtifactDir, "EvidenceRegistry.json"),
     JSON.stringify(exportPayload, null, 2)
   );
-  console.log(`✓ Exported ABI & address to backend/contract_artifacts/EvidenceRegistry.json`);
-
-  // 2. Export to frontend/src/contract_artifacts/
-  const frontendArtifactDir = path.resolve(__dirname, "../frontend/src/contract_artifacts");
-  fs.mkdirSync(frontendArtifactDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(frontendArtifactDir, "EvidenceRegistry.json"),
-    JSON.stringify(exportPayload, null, 2)
-  );
-  console.log(`✓ Exported ABI & address to frontend/src/contract_artifacts/EvidenceRegistry.json\n`);
+  console.log(`✓ Exported ABI & address to backend/contract_artifacts/EvidenceRegistry.json\n`);
 
   console.log("=================================================");
-  console.log("  To interact via Backend or Frontend, configure:");
+  console.log("  To interact via Backend API, configure:");
   console.log(`  CONTRACT_ADDRESS=${contractAddress}`);
   console.log(`  REGISTRAR_PRIVATE_KEY=<deployer_private_key>`);
   console.log("=================================================\n");

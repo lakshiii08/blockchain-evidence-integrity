@@ -52,7 +52,7 @@ blockchain-evidence-integrity/
 │   └── demo_flow.py                  # 8-step end-to-end hackathon demonstration
 ├── backend/
 │   ├── api/
-│   │   └── routes_evidence.py        # REST API endpoints (register, verify, provenance)
+│   │   └── routes_evidence.py        # REST API endpoints (register, verify, provenance, ABI)
 │   ├── services/
 │   │   ├── hashing.py                # 8 KB chunk streaming SHA-256 & bytes32 converters
 │   │   ├── blockchain.py             # Web3.py client with transaction signing & retries
@@ -64,15 +64,8 @@ blockchain-evidence-integrity/
 │   ├── tests/                        # Pytest unit & integration test suite (100% pass)
 │   ├── database.py                   # DB connection & session factory
 │   └── main.py                       # FastAPI application entrypoint
-├── frontend/
-│   ├── src/
-│   │   ├── components/               # RegisterModal, VerifyModal, ProvenanceTimeline
-│   │   └── pages/index.tsx           # Investigator Evidence Dashboard
-│   ├── package.json
-│   └── tailwind.config.js
 ├── docker/
 │   ├── Dockerfile.backend
-│   ├── Dockerfile.frontend
 │   └── Dockerfile.hardhat
 ├── docker-compose.yml
 ├── .env.example
@@ -101,7 +94,7 @@ npm run compile
 # Run smart contract unit tests (13 tests)
 npm test
 
-# Deploy locally and export ABI artifacts
+# Deploy locally and export ABI artifacts to backend
 npx hardhat run scripts/deploy.ts
 ```
 
@@ -111,7 +104,7 @@ npx hardhat run scripts/deploy.ts
 # Install Python requirements
 pip install -r backend/requirements.txt
 
-# Run backend test suite (7 tests)
+# Run backend test suite (8 tests)
 python -m pytest backend/tests -v
 
 # Start FastAPI server
@@ -119,16 +112,7 @@ python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 API Documentation will be accessible at: `http://localhost:8000/docs`
 
-### C. Next.js Investigator Dashboard
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Dashboard will be accessible at: `http://localhost:3000`
-
-### D. Run with Docker Compose
+### C. Run with Docker Compose
 
 ```bash
 docker-compose up --build
